@@ -2,3 +2,6 @@
 ### Uso de entorno específico
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .\dash_projects\Scripts\activate
+
+### Aztualizar los requiriments
+pip freeze > requirements.txt
