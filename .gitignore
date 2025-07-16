@@ -1,3 +1,5 @@
 .env
+/dash_projects/
+/venv/
 __pycache__/
 *.pyc
