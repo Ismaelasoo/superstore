@@ -25,11 +25,11 @@ WITH (
 BULK INSERT dbo.dimProduct
 FROM 'C:\Temp\dim_producto.csv'
 WITH (
+    FORMAT = 'CSV',
     FIRSTROW = 2,
     FIELDTERMINATOR = ',',
-    ROWTERMINATOR = '\n',
-    TABLOCK,
-    CODEPAGE = 'ACP' -- o '65001' si es UTF-8
+    ROWTERMINATOR = '0x0a',
+    TABLOCK
 );
 
 
