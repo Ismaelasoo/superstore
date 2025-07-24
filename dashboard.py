@@ -15,7 +15,8 @@ try:
     df = pd.read_csv(RUTA_COMPLETA_ENTRADA)
 except FileNotFoundError:
     print(f"ERROR: No se encontró el archivo '{RUTA_COMPLETA_ENTRADA}'.")
-    exit()
+    # En un entorno de servidor, es mejor lanzar una excepción que salir
+    raise FileNotFoundError(f"El archivo de datos no se encontró en la ruta: {RUTA_COMPLETA_ENTRADA}")
 
 df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 df['ShipDate'] = pd.to_datetime(df['ShipDate'])
@@ -26,6 +27,7 @@ df['State_Code'] = df['States'].map(us_state_to_abbrev)
 abbrev_to_us_state = {v: k for k, v in us_state_to_abbrev.items()}
 
 # --- 2. INICIALIZACIÓN DE LA APP DASH ---
+# Usamos un tema externo de Bootstrap para un look más moderno
 app = Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
 server = app.server
 
@@ -63,7 +65,6 @@ app.layout = dbc.Container([
 
         # --- Columna Derecha (Treemap) ---
         dbc.Col(
-            # El Card y el Graph deben estirarse para llenar la altura de la columna
             dbc.Card([
                 dbc.CardHeader(dbc.Row([
                     dbc.Col(html.H5("Desglose por Producto", className="my-auto")),
@@ -73,13 +74,12 @@ app.layout = dbc.Container([
             ], style={'height': '100%'}),
             width=5
         ),
-    ], className='mb-4 align-items-stretch'), # La clase 'align-items-stretch' es clave para la alineación
+    ], className='mb-4 align-items-stretch'),
     # ===================== FIN DE LA REESTRUCTURACIÓN DEL LAYOUT ======================
 
 ], fluid=True, style={'backgroundColor': "#b0b0b0"})
 
 # --- 4. CALLBACKS PARA LA INTERACTIVIDAD ---
-# (Los callbacks permanecen exactamente iguales, no se requiere ningún cambio aquí)
 @app.callback(
     Output('crossfilter-store', 'data'),
     Input('map-ventas-estado', 'clickData'),
@@ -157,4 +157,5 @@ def update_all_components(region, start_date, end_date, crossfilter_data):
 
 # --- 5. EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
+    # Cambiamos app.run() a app.run_server() que es la forma recomendada
     app.run(debug=True)
