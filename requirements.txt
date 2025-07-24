@@ -41,7 +41,6 @@ pyodbc==5.2.0
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.1
 pytz==2025.2
-pywin32==311
 pyzmq==27.0.0
 requests==2.32.4
 retrying==1.4.0
