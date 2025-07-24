@@ -1,3 +1,6 @@
 **Activar el entorno**
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .\dash_projects\Scripts\Activate.ps1
+
+**Limpiar puerto**
+netstat -ano | findstr :8050

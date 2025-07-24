@@ -1,86 +1,23 @@
 # --- 0. IMPORTACIÓN DE LIBRERÍAS ---
-from sqlalchemy import create_engine
-from urllib.parse import quote_plus
-import pandas as pd
-import os
-from dotenv import load_dotenv
 from dash import Dash, dcc, html, dash_table, Input, Output, State, ctx
 from dash.exceptions import PreventUpdate
 import plotly.express as px
+import pandas as pd
+import os
 import dash_bootstrap_components as dbc
 
-# --- 0. CONFIGURACIÓN ---
-load_dotenv()
+# --- 1. CARGA Y PREPARACIÓN DE DATOS ---
 RUTA_CARPETA_DATOS = "data"
 NOMBRE_ARCHIVO = "data_all.csv"
-RUTA_COMPLETA_SALIDA = os.path.join(RUTA_CARPETA_DATOS, NOMBRE_ARCHIVO)
+RUTA_COMPLETA_ENTRADA = os.path.join(RUTA_CARPETA_DATOS, NOMBRE_ARCHIVO)
 
-# --- 1. DATOS DE CONEXIÓN ---
-servidor = os.getenv("MI_SERVIDOR")
-base_de_datos = os.getenv("MI_BASE_DE_DATOS")
-usuario = os.getenv("MI_USUARIO")
-contrasena = os.getenv("MI_CONTRASENA")
-driver = os.getenv("DRIVER")
-
-if not all([servidor, base_de_datos, usuario, contrasena, driver]):
-    print("ERROR: Faltan una o más variables de entorno. Revisa tu archivo .env.")
-    exit()
-
-# --- 2. CONSTRUCCIÓN DE LA URL ---
-contrasena_codificada = quote_plus(contrasena)
-driver_codificado = quote_plus(driver)
-url = f"mssql+pyodbc://{usuario}:{contrasena_codificada}@{servidor}/{base_de_datos}?driver={driver_codificado}"
-
-# --- 3. QUERY SQL ---
-query_completa = """
-SELECT
-    -- Hechos
-    fv.Sales,
-    fv.Quantity,
-    fv.Discount,
-    fv.Profit,
-    fv.OrderDate,
-    fv.ShipDate,
-    fv.ShipMode,
-    fv.OrderID,
-    
-    -- Dimension Cliente
-    dc.CustomerName,
-    dc.Segment,
-    
-    -- Dimension Producto
-    dp.ProductName,
-    dp.SubCategory,
-    dp.Category,
-    
-    -- Dimension Region
-    dr.City,
-    dr.States,
-    dr.Region,
-    dr.Country
-FROM
-    factVentas AS fv
-JOIN
-    dimCustomer AS dc ON fv.CustomerID = dc.CustomerID
-JOIN
-    dimProduct AS dp ON fv.ProductID = dp.ProductID
-JOIN
-    dimRegion AS dr ON fv.PostalCode = dr.PostalCode;
-"""
-
-print("Iniciando proceso de extracción de datos...")
-
-# --- 4. CONEXIÓN Y EXTRACCIÓN ---
 try:
-    print(f"Conectando a la base de datos '{base_de_datos}' en el servidor '{servidor}'...")
-    engine = create_engine(url)
-    
-    df = pd.read_sql_query(query_completa, engine)
-    print(f"¡Carga exitosa! Se han extraído {len(df)} filas.")
-    
-except Exception as e:
-    print(f"ERROR durante el proceso: {e}")   
-    
+    df = pd.read_csv(RUTA_COMPLETA_ENTRADA)
+except FileNotFoundError:
+    print(f"ERROR: No se encontró el archivo '{RUTA_COMPLETA_ENTRADA}'.")
+    # En un entorno de servidor, es mejor lanzar una excepción que salir
+    raise FileNotFoundError(f"El archivo de datos no se encontró en la ruta: {RUTA_COMPLETA_ENTRADA}")
+
 df['OrderDate'] = pd.to_datetime(df['OrderDate'])
 df['ShipDate'] = pd.to_datetime(df['ShipDate'])
 df = df.sort_values('OrderDate')
@@ -220,5 +157,4 @@ def update_all_components(region, start_date, end_date, crossfilter_data):
 
 # --- 5. EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
-    # Cambiamos app.run() a app.run_server() que es la forma recomendada
     app.run(debug=True)
